@@ -14,14 +14,35 @@ export class OdmTodoRepository implements TodoRepository {
     private readonly model: Model<TodoDocument>,
   ) {}
 
-  async findAll(): Promise<Todo[]> {
-    const todos = await this.model.find().lean();
+  async findAll(
+    searchQuery: string = '',
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<Todo[]> {
+    const pipeline = [];
 
-    return todos.map((todo) => TodoMapper.toDomain(todo));
+    if (searchQuery) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { title: { $regex: searchQuery, $options: 'i' } },
+            { description: { $regex: searchQuery, $options: 'i' } },
+            { status: { $regex: searchQuery, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push({ $skip: (page - 1) * pageSize });
+    pipeline.push({ $limit: pageSize });
+
+    const todos: TodoSchema[] = await this.model.aggregate(pipeline);
+
+    return todos.map((todo: TodoSchema) => TodoMapper.toDomain(todo));
   }
 
   async findById(id: string): Promise<Todo> {
-    const todo = await this.model.findById(id).lean();
+    const todo: TodoSchema = await this.model.findById(id).lean();
 
     return TodoMapper.toDomain(todo);
   }

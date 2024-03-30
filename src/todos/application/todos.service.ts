@@ -22,8 +22,8 @@ export class TodosService {
     return this.repository.save(todo);
   }
 
-  async getTodos() {
-    return this.repository.findAll();
+  async getTodos(searchQuery: string, page: number, pageSize: number) {
+    return this.repository.findAll(searchQuery, page, pageSize);
   }
 
   async getTodoById(id: string): Promise<Todo> {
