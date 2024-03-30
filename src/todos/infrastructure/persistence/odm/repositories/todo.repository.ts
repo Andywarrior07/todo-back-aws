@@ -5,6 +5,7 @@ import { TodoRepository } from '../../../../application/ports/todo.repository';
 import { Todo as TodoSchema, TodoDocument } from '../schemas/todo.schema';
 import { Todo } from '../../../../domain/todo';
 import { TodoMapper } from '../mappers/todo.mapper';
+import { Status } from '../../../../domain/value-objects/todo-status';
 
 @Injectable()
 export class OdmTodoRepository implements TodoRepository {
@@ -32,11 +33,20 @@ export class OdmTodoRepository implements TodoRepository {
     return TodoMapper.toDomain(await todo.save());
   }
 
-  async update(id: string, todo: Todo): Promise<void> {
-    return Promise.resolve(undefined);
+  async update(id: string, status: Status): Promise<Todo> {
+    const todo = await this.findById(id);
+    const persistenceModel: TodoSchema = TodoMapper.toPersistence({
+      ...todo,
+      status,
+    });
+    const updatedTodo: TodoSchema = await this.model
+      .findByIdAndUpdate(id, persistenceModel, { new: true })
+      .lean();
+
+    return TodoMapper.toDomain(updatedTodo);
   }
 
   async delete(id: string): Promise<void> {
-    return Promise.resolve(undefined);
+    await this.model.findByIdAndDelete(id);
   }
 }

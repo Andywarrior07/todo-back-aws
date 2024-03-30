@@ -3,6 +3,8 @@ import { TodoFactory } from '../domain/factories/todo.factory';
 import { TodoRepository } from './ports/todo.repository';
 import { Todo } from '../domain/todo';
 import { CreateTodoCommand } from './commands/create-todo.command';
+import { Status } from '../domain/value-objects/todo-status';
+import { TodoStatusEnum } from '../domain/interfaces/todo.interface';
 
 @Injectable()
 export class TodosService {
@@ -28,7 +30,13 @@ export class TodosService {
     return this.repository.findById(id);
   }
 
-  async updateTodo() {}
+  async updateTodo(id: string): Promise<Todo> {
+    const status = new Status(TodoStatusEnum.DONE);
 
-  async deleteTodo() {}
+    return this.repository.update(id, status);
+  }
+
+  async deleteTodo(id: string): Promise<void> {
+    return this.repository.delete(id);
+  }
 }
